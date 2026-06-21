@@ -13,8 +13,9 @@ import Transactions from "./pages/Transactions";
 import CategoryList from "./pages/CategoryList";
 import Category from "./pages/Category";
 import NewCategory from "./pages/NewCategory";
-import { ToastContainer } from "react-toastify";
+import NotFound from "./pages/NotFound";
 
+import { ToastContainer } from "react-toastify";
 import {
   BrowserRouter,
   Routes,
@@ -23,30 +24,34 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
 
 function AppContent() {
   const currentUser = useSelector((state) => state.user.currentUser);
   const admin = currentUser?.isAdmin;
 
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login";
-  useEffect(() => {
-    if (isLoginPage && admin) {
-      // If the user is already logged in and tries to access the login page, redirect to home
-      <Navigate to="/" replace />;
-    } else if (!isLoginPage && !admin) {
-      // If the user is not logged in and tries to access any page other than login, redirect to login
-      <Navigate to="/login" replace />;
-    }
-  }, [isLoginPage, admin]);
+
+  // All routes that should show Topbar and Sidebar
+  const protectedRoutes = [
+    "/",
+    "/users",
+    "/newUser",
+    "/products",
+    "/newProduct",
+    "/transactions",
+    "/categories",
+  ];
+
+  const showLayout =
+    admin &&
+    protectedRoutes.includes(location.pathname);
 
   return (
     <>
-      {!isLoginPage && <Topbar />}
+      {showLayout && <Topbar />}
 
-      <div className="container">
-        {!isLoginPage && <Sidebar />}
+      <div className={showLayout ? "container" : ""}>
+        {showLayout && <Sidebar />}
 
         <Routes>
           <Route
@@ -58,8 +63,6 @@ function AppContent() {
             path="/users"
             element={admin ? <UserList /> : <Navigate to="/login" replace />}
           />
-
-          <Route path="/login" element={<Login />} />
 
           <Route
             path="/user/:userId"
@@ -73,7 +76,9 @@ function AppContent() {
 
           <Route
             path="/products"
-            element={admin ? <ProductList /> : <Navigate to="/login" replace />}
+            element={
+              admin ? <ProductList /> : <Navigate to="/login" replace />
+            }
           />
 
           <Route
@@ -83,7 +88,9 @@ function AppContent() {
 
           <Route
             path="/newProduct"
-            element={admin ? <NewProduct /> : <Navigate to="/login" replace />}
+            element={
+              admin ? <NewProduct /> : <Navigate to="/login" replace />
+            }
           />
 
           <Route
@@ -107,8 +114,19 @@ function AppContent() {
 
           <Route
             path="/newCategory"
-            element={admin ? <NewCategory /> : <Navigate to="/login" replace />}
+            element={
+              admin ? <NewCategory /> : <Navigate to="/login" replace />
+            }
           />
+
+          {/* Login page */}
+          <Route
+            path="/login"
+            element={admin ? <Navigate to="/" replace /> : <Login />}
+          />
+
+          {/* 404 page - no Topbar or Sidebar */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
 
         <ToastContainer
